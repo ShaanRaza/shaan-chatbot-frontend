@@ -254,6 +254,14 @@ function appendMessage(role, text, sources = [], isError = false, hallFlag = fal
     content.appendChild(sourcesRow);
   }
 
+  // Latency disclaimer (bot only, skip on errors)
+  if (role === 'bot' && !isError) {
+    const disclaimer = document.createElement('div');
+    disclaimer.className = 'response-disclaimer';
+    disclaimer.innerHTML = '⏱ Running on free LLM models — sorry for the slow response!';
+    content.appendChild(disclaimer);
+  }
+
   row.appendChild(avatar);
   row.appendChild(content);
   area.appendChild(row);

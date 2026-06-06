@@ -1052,6 +1052,14 @@ code {
   color: var(--warning);
   font-family: var(--font-mono);
 }
+.response-disclaimer {
+  font-size: 10px;
+  font-family: var(--font-mono);
+  color: var(--fg-mute);
+  padding: 4px 2px 0;
+  letter-spacing: 0.02em;
+  font-style: italic;
+}
 .sources-row {
   display: flex;
   flex-wrap: wrap;
