@@ -711,8 +711,8 @@ async function loadAdminStatus() {
     const rows = document.getElementById('adminStatusRows');
     rows.innerHTML = [
       statusRow('RAG Knowledge Base', rag.is_loaded ? `✅ Loaded (${rag.total_chunks} chunks)` : '⏳ Loading…', rag.is_loaded),
-      statusRow('Kimi LLM', status.llm_ready ? '✅ Ready' : '❌ Not configured', status.llm_ready),
-      statusRow('Kimi API Key', config.kimi_api_key ? `✅ ${config.kimi_api_key}` : '❌ Not set', !!config.kimi_api_key),
+      statusRow('Gemini LLM', status.llm_ready ? '✅ Ready' : '❌ Not configured', status.llm_ready),
+      statusRow('Gemini API Key', config.gemini_api_key ? `✅ ${config.gemini_api_key}` : '❌ Not set', !!config.gemini_api_key),
       statusRow('Active Sessions', String(status.active_sessions || 0), true),
     ].join('');
 
@@ -737,12 +737,12 @@ function statusRow(key, val, ok) {
 }
 
 async function saveConfig() {
-  const key = document.getElementById('kimiKeyInput').value.trim();
+  const key = document.getElementById('geminiKeyInput').value.trim();
   const calId = document.getElementById('calendarIdInput').value.trim();
 
   const payload = { google_calendar_id: calId };
   if (key) {
-    payload.kimi_api_key = key;
+    payload.gemini_api_key = key;
   }
 
   try {
@@ -754,7 +754,7 @@ async function saveConfig() {
     const data = await res.json();
     if (data.success) {
       showToast('✅ Configuration saved successfully!', 'success');
-      document.getElementById('kimiKeyInput').value = '';
+      document.getElementById('geminiKeyInput').value = '';
       await loadAdminStatus();
       checkStatus();
     } else {
