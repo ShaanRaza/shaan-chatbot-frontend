@@ -652,12 +652,13 @@
             const valueEl = card.querySelector('.stat-value');
             const target = card.dataset.numericValue;
             const suffix = card.dataset.suffix || '';
-            if (valueEl && target) animateCounter(valueEl, target, suffix);
-            counterIO.unobserve(card);
+            if (valueEl && target) {
+              animateCounter(valueEl, target, suffix);
+              counterIO.unobserve(card);
+            }
           }
         });
       }, { threshold: 0.4 });
-      $$('.stat-card').forEach((c) => counterIO.observe(c));
 
       /* ── Fetch /api/stats and re-render ── */
       const ICONS = {
@@ -764,7 +765,9 @@
           console.warn('[portfolio] /api/stats failed, keeping static defaults:', e.message);
         }
       };
-      loadStats();
+      loadStats().then(() => {
+        $$('.stat-card').forEach((c) => counterIO.observe(c));
+      });
       // Refresh every 60s so the clock & stats stay current
       setInterval(loadStats, 60000);
 
