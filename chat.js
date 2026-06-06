@@ -711,8 +711,8 @@ async function loadAdminStatus() {
     const rows = document.getElementById('adminStatusRows');
     rows.innerHTML = [
       statusRow('RAG Knowledge Base', rag.is_loaded ? `✅ Loaded (${rag.total_chunks} chunks)` : '⏳ Loading…', rag.is_loaded),
-      statusRow('Gemini LLM', status.llm_ready ? '✅ Ready' : '❌ Not configured', status.llm_ready),
-      statusRow('Gemini API Key', config.gemini_api_key ? `✅ ${config.gemini_api_key}` : '❌ Not set', !!config.gemini_api_key),
+      statusRow('NVIDIA NIM LLM', status.llm_ready ? '✅ Ready' : '❌ Not configured', status.llm_ready),
+      statusRow('NVIDIA API Key', config.gemini_api_key ? `✅ ${config.gemini_api_key}` : '❌ Not set', !!config.gemini_api_key),
       statusRow('Active Sessions', String(status.active_sessions || 0), true),
     ].join('');
 
