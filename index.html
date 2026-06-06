@@ -685,11 +685,19 @@
           if (iconEl && ICONS[stat.icon]) iconEl.innerHTML = ICONS[stat.icon];
           if (labelEl) labelEl.textContent = stat.label;
           if (subEl)   subEl.textContent   = stat.sub;
-          // Reset value (will animate when in view)
+          // Reset value (will animate when in view, unless already animated)
           const valueEl = card.querySelector('.stat-value');
           if (valueEl) {
-            valueEl.dataset.animated = '0';
-            valueEl.innerHTML = '0' + (stat.suffix ? `<span class="stat-suffix">${esc(stat.suffix)}</span>` : '');
+            const wasAnimated = valueEl.dataset.animated === '1';
+            valueEl.dataset.animated = wasAnimated ? '1' : '0';
+            if (wasAnimated) {
+              const isFloat = String(stat.value).includes('.');
+              const numericTarget = parseFloat(stat.value);
+              valueEl.innerHTML = (isFloat ? numericTarget.toFixed(1) : numericTarget) +
+                (stat.suffix ? `<span class="stat-suffix">${esc(stat.suffix)}</span>` : '');
+            } else {
+              valueEl.innerHTML = '0' + (stat.suffix ? `<span class="stat-suffix">${esc(stat.suffix)}</span>` : '');
+            }
           }
         });
         // Wire click → ask AI
