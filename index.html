@@ -565,8 +565,20 @@
   <div class="toast-container" id="toastContainer" aria-live="polite"></div>
 
   <script>
-    /* ── Scroll-reveal + nav background on scroll ── */
+    /* ═══════════════════════════════════════════════════════════
+       App.js — Dynamic data loader, interactions, animations
+       ═══════════════════════════════════════════════════════════ */
     (() => {
+      const API_BASE = (window.API_BASE_URL && window.API_BASE_URL !== "API_URL_PLACEHOLDER")
+        ? window.API_BASE_URL
+        : "https://web-production-11aa7.up.railway.app";
+
+      /* ── Helpers ── */
+      const $  = (sel, root = document) => root.querySelector(sel);
+      const $$ = (sel, root = document) => Array.from(root.querySelectorAll(sel));
+      const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+
+      /* ── Nav background on scroll ── */
       const nav = document.getElementById('nav');
       const onScroll = () => {
         if (!nav) return;
@@ -581,20 +593,199 @@
       window.addEventListener('scroll', onScroll, { passive: true });
       onScroll();
 
-      const targets = document.querySelectorAll('.section, .hero, .stat-card, .work-card, .project-pill, .terminal, .contact-card');
-      targets.forEach((el, i) => {
+      /* ── Scroll-reveal ── */
+      const revealTargets = $$('.section, .hero, .stat-card, .work-card, .project-pill, .terminal, .contact-card');
+      revealTargets.forEach((el, i) => {
         el.classList.add('reveal');
         el.style.transitionDelay = `${Math.min(i * 30, 200)}ms`;
       });
-      const io = new IntersectionObserver((entries) => {
+      const revealIO = new IntersectionObserver((entries) => {
         entries.forEach((e) => {
           if (e.isIntersecting) {
             e.target.classList.add('in-view');
-            io.unobserve(e.target);
+            revealIO.unobserve(e.target);
           }
         });
       }, { threshold: 0.08, rootMargin: '0px 0px -40px 0px' });
-      targets.forEach((el) => io.observe(el));
+      revealTargets.forEach((el) => revealIO.observe(el));
+
+      /* ── Live IST clock (terminal meta) ── */
+      const clockEl = document.getElementById('terminalMeta');
+      const updateClock = () => {
+        if (!clockEl) return;
+        try {
+          const now = new Date();
+          const fmt = new Intl.DateTimeFormat('en-GB', {
+            timeZone: 'Asia/Kolkata', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false
+          });
+          clockEl.textContent = fmt.format(now) + ' IST';
+        } catch {
+          clockEl.textContent = new Date().toLocaleTimeString() + ' IST';
+        }
+      };
+      updateClock();
+      setInterval(updateClock, 1000);
+
+      /* ── Counter animation ── */
+      const animateCounter = (el, target, suffix) => {
+        if (el.dataset.animated === '1') return;
+        el.dataset.animated = '1';
+        const duration = 1100;
+        const start = performance.now();
+        const isFloat = String(target).includes('.');
+        const numericTarget = parseFloat(target);
+        const step = (now) => {
+          const t = Math.min((now - start) / duration, 1);
+          const eased = 1 - Math.pow(1 - t, 3);
+          const current = numericTarget * eased;
+          const display = isFloat ? current.toFixed(1) : Math.floor(current);
+          el.innerHTML = display + (suffix ? `<span class="stat-suffix">${esc(suffix)}</span>` : '');
+          if (t < 1) requestAnimationFrame(step);
+          else el.innerHTML = (isFloat ? numericTarget.toFixed(1) : numericTarget) + (suffix ? `<span class="stat-suffix">${esc(suffix)}</span>` : '');
+        };
+        requestAnimationFrame(step);
+      };
+      const counterIO = new IntersectionObserver((entries) => {
+        entries.forEach((e) => {
+          if (e.isIntersecting) {
+            const card = e.target;
+            const valueEl = card.querySelector('.stat-value');
+            const target = card.dataset.numericValue;
+            const suffix = card.dataset.suffix || '';
+            if (valueEl && target) animateCounter(valueEl, target, suffix);
+            counterIO.unobserve(card);
+          }
+        });
+      }, { threshold: 0.4 });
+      $$('.stat-card').forEach((c) => counterIO.observe(c));
+
+      /* ── Fetch /api/stats and re-render ── */
+      const ICONS = {
+        education: '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M4.26 10.147a60.438 60.438 0 0 0-.491 6.347A48.62 48.62 0 0 1 12 20.904a48.62 48.62 0 0 1 8.232-4.41 60.46 60.46 0 0 0-.491-6.347m-15.482 0a50.636 50.636 0 0 0-2.658-.813A59.906 59.906 0 0 1 12 3.493a59.903 59.903 0 0 1 10.399 5.84c-.896.248-1.783.52-2.658.814m-15.482 0A50.717 50.717 0 0 1 12 13.489a50.702 50.702 0 0 1 7.74-3.342M6.75 15a.75.75 0 1 0 0-1.5.75.75 0 0 0 0 1.5Zm0 0v-3.675A55.378 55.378 0 0 1 12 8.443m-7.007 11.55A5.981 5.981 0 0 0 6.75 15.75v-1.5" /></svg>',
+        database:  '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M20.25 6.375c0 2.278-3.694 4.125-8.25 4.125S3.75 8.653 3.75 6.375m16.5 0c0-2.278-3.694-4.125-8.25-4.125S3.75 4.097 3.75 6.375m16.5 0v11.25c0 2.278-3.694 4.125-8.25 4.125s-8.25-1.847-8.25-4.125V6.375m16.5 0v3.75m-16.5-3.75v3.75m16.5 0v3.75C20.25 16.153 16.556 18 12 18s-8.25-1.847-8.25-4.125v-3.75m16.5 0c0 2.278-3.694 4.125-8.25 4.125s-8.25-1.847-8.25-4.125" /></svg>',
+        trophy:    '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M16.5 18.75h-9m9 0a3 3 0 0 1 3 3h-15a3 3 0 0 1 3-3m9 0v-4.5A3.375 3.375 0 0 0 19.125 10.875 3.375 3.375 0 0 0 16.5 7.5h0m-9 11.25V18a3 3 0 0 0-3 3h15a3 3 0 0 0-3-3v0m-9-4.5h9m-9 0a3 3 0 0 1-3-3V7.5a3 3 0 0 1 3-3h9a3 3 0 0 1 3 3v3.75a3 3 0 0 1-3 3Z" /></svg>',
+        code:      '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M17.25 6.75 22.5 12l-5.25 5.25m-10.5 0L1.5 12l5.25-5.25m7.5-3-4.5 16.5" /></svg>',
+      };
+
+      const renderStats = (stats) => {
+        const cards = $$('.stat-card');
+        stats.forEach((stat, i) => {
+          const card = cards[i];
+          if (!card) return;
+          card.dataset.topic = stat.topic;
+          card.dataset.key   = stat.key;
+          card.dataset.numericValue = stat.value;
+          card.dataset.suffix = stat.suffix || '';
+          card.setAttribute('role', 'button');
+          card.setAttribute('tabindex', '0');
+          const iconEl  = card.querySelector('.stat-icon');
+          const labelEl = card.querySelector('.stat-label');
+          const subEl   = card.querySelector('.stat-sub');
+          if (iconEl && ICONS[stat.icon]) iconEl.innerHTML = ICONS[stat.icon];
+          if (labelEl) labelEl.textContent = stat.label;
+          if (subEl)   subEl.textContent   = stat.sub;
+          // Reset value (will animate when in view)
+          const valueEl = card.querySelector('.stat-value');
+          if (valueEl) {
+            valueEl.dataset.animated = '0';
+            valueEl.innerHTML = '0' + (stat.suffix ? `<span class="stat-suffix">${esc(stat.suffix)}</span>` : '');
+          }
+        });
+        // Wire click → ask AI
+        cards.forEach((card) => {
+          if (card.dataset.wired === '1') return;
+          card.dataset.wired = '1';
+          const handler = () => {
+            const topic = card.dataset.topic;
+            if (!topic || !window.sendSuggestedQuestion) return;
+            window.sendSuggestedQuestion(`Tell me about your ${topic}.`);
+            document.getElementById('chat-section')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          };
+          card.addEventListener('click', handler);
+          card.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handler(); } });
+        });
+      };
+
+      const renderTicker = (items) => {
+        const track = $('.ticker-track');
+        if (!track || !Array.isArray(items) || items.length === 0) return;
+        const html = (arr) => arr.map((s) => `<div class="ticker-item" data-skill="${esc(s)}" role="button" tabindex="0"><span class="ticker-dot"></span>${esc(s)}</div>`).join('');
+        track.innerHTML = html(items) + html(items);
+        track.querySelectorAll('.ticker-item').forEach((el) => {
+          const handler = () => {
+            const skill = el.dataset.skill;
+            const input = document.getElementById('chatInput');
+            if (input) {
+              input.value = `Tell me about your experience with ${skill}.`;
+              input.focus();
+              document.getElementById('chat-section')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+          };
+          el.addEventListener('click', handler);
+          el.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handler(); } });
+        });
+      };
+
+      const renderTerminal = (term) => {
+        const body  = $('.terminal-body');
+        const title = $('.terminal-title');
+        if (!body || !term) return;
+        if (title && term.title) title.textContent = term.title;
+        body.innerHTML = (term.lines || []).map((line) => {
+          if (line.type === 'cmd') {
+            return `<div class="terminal-line" data-cmd="${esc(line.text)}"><span class="terminal-prompt">$</span> <span class="terminal-cmd">${esc(line.text)}</span></div>`;
+          }
+          return `<div class="terminal-line terminal-output">${esc(line.text)}</div>`;
+        }).join('');
+        // Click any cmd line → ask AI
+        body.querySelectorAll('.terminal-line[data-cmd]').forEach((el) => {
+          el.style.cursor = 'pointer';
+          el.addEventListener('click', () => {
+            const cmd = el.dataset.cmd;
+            const input = document.getElementById('chatInput');
+            if (input) {
+              input.value = `Explain: ${cmd}`;
+              input.focus();
+              document.getElementById('chat-section')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+          });
+        });
+      };
+
+      const loadStats = async () => {
+        try {
+          const res = await fetch(API_BASE + '/api/stats', { cache: 'no-store' });
+          if (!res.ok) throw new Error('HTTP ' + res.status);
+          const data = await res.json();
+          if (data.stats)   renderStats(data.stats);
+          if (data.ticker)  renderTicker(data.ticker);
+          if (data.terminal) renderTerminal(data.terminal);
+        } catch (e) {
+          console.warn('[portfolio] /api/stats failed, keeping static defaults:', e.message);
+        }
+      };
+      loadStats();
+      // Refresh every 60s so the clock & stats stay current
+      setInterval(loadStats, 60000);
+
+      /* ── "Available for hire" pill → open booking ── */
+      const availPill = document.querySelector('.status-pill');
+      if (availPill) {
+        availPill.style.cursor = 'pointer';
+        availPill.setAttribute('role', 'button');
+        availPill.setAttribute('tabindex', '0');
+        const handler = () => window.openBookingModal && window.openBookingModal();
+        availPill.addEventListener('click', handler);
+        availPill.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); handler(); } });
+      }
+
+      /* ── Terminal title → open booking (subtle CTA) ── */
+      const termTitle = document.querySelector('.terminal-title');
+      if (termTitle) {
+        termTitle.style.cursor = 'pointer';
+        termTitle.title = 'Book a 1-hour interview';
+        termTitle.addEventListener('click', () => window.openBookingModal && window.openBookingModal());
+      }
     })();
   </script>
   <script src="chat.js"></script>
