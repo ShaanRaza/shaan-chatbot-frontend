@@ -61,19 +61,30 @@ async function checkStatus() {
     const data = await res.json();
     const dot = $status();
 
-    if (data.rag_loaded) {
+    const isReady = data.ready || data.rag_loaded;
+    if (isReady) {
       dot.textContent = data.llm_ready ? 'AI Ready' : 'RAG Ready (No LLM Key)';
       dot.className = 'status-dot';
+      
+      // Hide and remove loading overlay once ready
+      const overlay = document.getElementById('loadingOverlay');
+      if (overlay) {
+        overlay.style.opacity = '0';
+        overlay.style.visibility = 'hidden';
+        setTimeout(() => overlay.remove(), 400);
+      }
     } else {
       dot.textContent = 'Loading KB…';
       dot.className = 'status-dot loading';
       // Keep polling until ready
-      setTimeout(checkStatus, 3000);
+      setTimeout(checkStatus, 1500);
     }
   } catch {
     const dot = $status();
     dot.textContent = 'Offline';
     dot.className = 'status-dot offline';
+    // Retry polling
+    setTimeout(checkStatus, 2000);
   }
 }
 
