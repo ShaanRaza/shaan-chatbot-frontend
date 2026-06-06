@@ -33,6 +33,23 @@ document.addEventListener('DOMContentLoaded', () => {
   updateInterviewsCounter();
   setInterval(checkStatus, 15000);
 
+  // Safety timeout: reveal chat after 15s even if status is not ready
+  setTimeout(() => {
+    const overlay = document.getElementById('loadingOverlay');
+    if (overlay) {
+      console.warn('Warming up timed out. Displaying chat interface anyway.');
+      overlay.style.opacity = '0';
+      overlay.style.visibility = 'hidden';
+      setTimeout(() => overlay.remove(), 400);
+      
+      const dot = $status();
+      if (dot && (dot.textContent === 'Loading KB…' || dot.className.includes('loading'))) {
+        dot.textContent = 'Ready (Delayed)';
+        dot.className = 'status-dot';
+      }
+    }
+  }, 15000);
+
   document.getElementById('sendBtn').addEventListener('click', handleSend);
   document.getElementById('clearBtn').addEventListener('click', clearConversation);
   document.getElementById('bookCTABtn').addEventListener('click', () => {
