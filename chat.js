@@ -5,7 +5,7 @@
 
 'use strict';
 
-const API_BASE = window.API_BASE_URL || '';
+const API_BASE = (window.API_BASE_URL && window.API_BASE_URL !== "API_URL_PLACEHOLDER") ? window.API_BASE_URL : "https://web-production-11aa7.up.railway.app";
 
 // ─── State ────────────────────────────────────────────────────
 const STATE = {
