@@ -393,7 +393,7 @@ function initKeyboardShortcuts() {
 
   document.addEventListener('keydown', e => {
     if (e.key === 'Escape') {
-      document.querySelectorAll('.modal-overlay.active').forEach(m => {
+      document.querySelectorAll('.modal-overlay.open').forEach(m => {
         closeModal(m.id);
       });
     }
@@ -870,12 +870,12 @@ function renderEvalReport(data) {
 // Modal Utilities
 // ─────────────────────────────────────────────────────────────
 function openModal(id) {
-  document.getElementById(id).classList.add('active');
+  document.getElementById(id).classList.add('open');
   document.body.style.overflow = 'hidden';
 }
 
 function closeModal(id) {
-  document.getElementById(id).classList.remove('active');
+  document.getElementById(id).classList.remove('open');
   document.body.style.overflow = '';
 }
 
