@@ -719,8 +719,9 @@ async function loadAdminStatus() {
     const rows = document.getElementById('adminStatusRows');
     rows.innerHTML = [
       statusRow('RAG Knowledge Base', rag.is_loaded ? `✅ Loaded (${rag.total_chunks} chunks)` : '⏳ Loading…', rag.is_loaded),
-      statusRow('NVIDIA NIM LLM', status.llm_ready ? '✅ Ready' : '❌ Not configured', status.llm_ready),
-      statusRow('NVIDIA API Key', config.gemini_api_key ? `✅ ${config.gemini_api_key}` : '❌ Not set', !!config.gemini_api_key),
+      statusRow('LLM Client', status.llm_ready ? '✅ Ready' : '❌ Not configured', status.llm_ready),
+      statusRow('Gemini API Key', config.gemini_api_key ? `✅ ${config.gemini_api_key}` : '❌ Not set', !!config.gemini_api_key),
+      statusRow('Groq API Key (fallback)', config.groq_api_key ? `✅ ${config.groq_api_key}` : '❌ Not set', !!config.groq_api_key),
       statusRow('Active Sessions', String(status.active_sessions || 0), true),
     ].join('');
 
@@ -745,12 +746,16 @@ function statusRow(key, val, ok) {
 }
 
 async function saveConfig() {
-  const key = document.getElementById('geminiKeyInput').value.trim();
+  const geminiKey = document.getElementById('geminiKeyInput').value.trim();
+  const groqKey = document.getElementById('groqKeyInput').value.trim();
   const calId = document.getElementById('calendarIdInput').value.trim();
 
   const payload = { google_calendar_id: calId };
-  if (key) {
-    payload.gemini_api_key = key;
+  if (geminiKey) {
+    payload.gemini_api_key = geminiKey;
+  }
+  if (groqKey) {
+    payload.groq_api_key = groqKey;
   }
 
   try {
@@ -763,6 +768,7 @@ async function saveConfig() {
     if (data.success) {
       showToast('✅ Configuration saved successfully!', 'success');
       document.getElementById('geminiKeyInput').value = '';
+      document.getElementById('groqKeyInput').value = '';
       await loadAdminStatus();
       checkStatus();
     } else {

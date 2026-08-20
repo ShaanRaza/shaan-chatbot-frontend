@@ -497,10 +497,19 @@
 
           <div class="form-group">
             <label class="form-label" for="geminiKeyInput">
-              NVIDIA API Key
-              <span class="form-hint-inline">(get at <a href="https://build.nvidia.com" target="_blank">build.nvidia.com</a>)</span>
+              Gemini API Key
+              <span class="form-hint-inline">(get at <a href="https://aistudio.google.com/apikey" target="_blank">aistudio.google.com/apikey</a>)</span>
             </label>
-            <input class="form-input" type="password" id="geminiKeyInput" placeholder="nvapi-…" />
+            <input class="form-input" type="password" id="geminiKeyInput" placeholder="AQ...." />
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="groqKeyInput">
+              Groq API Key <span class="form-hint-inline">(optional fallback)</span>
+              <span class="form-hint-inline">(get at <a href="https://console.groq.com/keys" target="_blank">console.groq.com/keys</a>)</span>
+            </label>
+            <input class="form-input" type="password" id="groqKeyInput" placeholder="gsk_…" />
+            <div class="form-hint">Used automatically if Gemini's free-tier daily quota (20 requests/day) is exhausted.</div>
           </div>
 
           <div class="form-group">
